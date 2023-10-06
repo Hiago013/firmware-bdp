@@ -166,8 +166,8 @@ void loop() {
     pwm2 = controller2.get_pwm();
   }
 
-  motor1.move(leftMotor3(ESP_Data.speed_left));
-  motor2.move(rightMotor3(ESP_Data.speed_right));
+  motor1.move(leftMotor1(ESP_Data.speed_left));
+  motor2.move(rightMotor1(ESP_Data.speed_right));
 
   
   if(millis() - turnoffMotorTime > TIME_TURN_OFF){
@@ -209,17 +209,17 @@ int RPM2PWM(double rpm){
 
 double rightMotor1(int rpm){
   // PWM | RPM
-  // 25    45
-  // 50    96
-  // 100   194
-  // 150   296
-  // 200   395
-  // 255   491
+  // 25    31
+  // 50    71
+  // 100   148
+  // 150   228
+  // 200   307
+  // 255   390
   double pwm;
-  pwm = 0.4571 + 0.5121 * abs(rpm);
+  pwm = 0.6389 * abs(rpm) + 4.873;
 
 
-  if(abs(rpm) > 490){
+  if(abs(rpm) > 390){
     pwm = 255;
   }
 
@@ -231,17 +231,17 @@ double rightMotor1(int rpm){
 
 double leftMotor1(int rpm){
   // PWM | RPM
-  // 25    36
-  // 50    78
-  // 100   162
-  // 150   249
-  // 200   328
-  // 255   409
+  // 25    41
+  // 50    91
+  // 100   185
+  // 150   280
+  // 200   373
+  // 255   450
   double pwm;
-  pwm = 0.9363 + 0.6129 * abs(rpm);
+  pwm = 0.0002164 * rpm * rpm + 0.4475 * abs(rpm) + 7.339;
 
 
-  if(abs(rpm) > 409){
+  if(abs(rpm) > 450){
     pwm = 255;
   }
 
