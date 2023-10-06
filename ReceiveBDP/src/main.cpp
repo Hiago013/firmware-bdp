@@ -21,6 +21,7 @@
 
 #define TIME_TURN_OFF 1000 // Tempo de espera para o robô parar
 // 48:E7:29:9A:2D:A0
+// 08:D1:F9:99:E5:C
 
 int ENCODER_OUTPUT = 187;
 double kp = .8, ki = 0.008, kd = 0.1;
@@ -55,11 +56,14 @@ struct_message ESP_Data = {0, 0};
 // put function declarations here:
 void ReadEncoder1();
 void ReadEncoder2();
-double rightMotor(int rpm);
-double leftMotor(int rpm);
+double rightMotor1(int rpm);
+double leftMotor1(int rpm);
 
-double rightMotorEncoder(int rpm);
-double leftMotorEncoder(int rpm);
+double rightMotor2(int rpm);
+double leftMotor2(int rpm);
+
+double rightMotor3(int rpm);
+double leftMotor3(int rpm);
 
 // Callback function executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
@@ -91,6 +95,10 @@ void setup() {
   // Register callback function
   esp_now_register_recv_cb(OnDataRecv);
 
+  /*
+  motor1.move(25);
+  motor2.move(25);
+  delay(10000);
   
   motor1.move(50);
   motor2.move(50);
@@ -111,7 +119,7 @@ void setup() {
   motor2.move(255);
   delay(10000);
   
-
+  */
 
 
 
@@ -158,8 +166,9 @@ void loop() {
     pwm2 = controller2.get_pwm();
   }
 
-  motor1.move(leftMotorEncoder(ESP_Data.speed_left));
-  motor2.move(rightMotorEncoder(ESP_Data.speed_right));
+  motor1.move(leftMotor3(ESP_Data.speed_left));
+  motor2.move(rightMotor3(ESP_Data.speed_right));
+
   
   if(millis() - turnoffMotorTime > TIME_TURN_OFF){
    ESP_Data.speed_left = 0;
@@ -196,106 +205,143 @@ int RPM2PWM(double rpm){
   }
 }
 
-double leftMotor(int rpm){
+// ROBOT 01 (Este é o com redução)
+
+double rightMotor1(int rpm){
   // PWM | RPM
-  // 50    0
-  // 100   134
-  // 150   220
-  // 200   306
-  // 255   400
-  double x4, x3, x2, x, c, sum;
-  x4 = 7.9278 * 1e-9 * pow(rpm, 4);
-  x3 = 8.3259 * 1e-6 * pow(abs(rpm), 3);
-  x2 = 3.1343 * 1e-3 * pow(rpm, 2);
-  x  = 8.3570 * 1e-2 * abs(rpm);
-  c  = 50;
-  sum = x4 - x3 + x2 + x + c;
+  // 25    45
+  // 50    96
+  // 100   194
+  // 150   296
+  // 200   395
+  // 255   491
+  double pwm;
+  pwm = 0.4571 + 0.5121 * abs(rpm);
 
-  if(sum <= 60){
-    sum = 0;
-  }
 
-  if(abs(rpm) > 400){
-    sum = 255;
+  if(abs(rpm) > 490){
+    pwm = 255;
   }
 
   if(rpm < 0){
-    return -sum;
+    return -pwm;
   }
-  return sum;
+  return pwm;
 }
 
-double rightMotor(int rpm){
-  double x4, x3, x2, x, c, sum;
+double leftMotor1(int rpm){
+  // PWM | RPM
+  // 25    36
+  // 50    78
+  // 100   162
+  // 150   249
+  // 200   328
+  // 255   409
+  double pwm;
+  pwm = 0.9363 + 0.6129 * abs(rpm);
+
+
+  if(abs(rpm) > 409){
+    pwm = 255;
+  }
+
+  if(rpm < 0){
+    return -pwm;
+  }
+  return pwm;
+}
+
+// ROBOT 2 (Este é o segundo a ser criado)
+
+double leftMotor2(int rpm){
+  // PWM | RPM
+  // 25    30
+  // 50    75
+  // 100   160
+  // 150   248
+  // 200   336
+  // 255   426
+  double pwm;
+
+  pwm = 0.579 * abs(rpm) + 6.962;
+
+  if(abs(rpm) > 426){
+    pwm = 255;
+  }
+
+  if(rpm < 0){
+    return -pwm;
+  }
+  return pwm;
+}
+
+double rightMotor2(int rpm){
+  double pwm;
   // PWM | RPM Forward
-  // 50    113
-  // 100   243
-  // 150   386
-  // 200   516
-  // 255   653
-  x4 = 8.6512 * 1e-10 * pow(rpm, 4);
-  x3 = 1.6410 * 1e-6 * pow(abs(rpm), 3);
-  x2 = 1.0120 * 1e-3 * pow(rpm, 2);
-  x  = 6.0410 * 1e-1 * abs(rpm);
-  c  = 7.5677;
-  sum = -x4 + x3 - x2 + x - c;
-  if(rpm < 0){
-    return -sum;
+  // 25    25
+  // 50    122
+  // 100   265
+  // 150   407
+  // 200   546
+  // 255   695
+
+  pwm = 0.3471 * abs(rpm) + 10.83;
+
+  if(abs(rpm) > 690){
+    pwm = 255;
   }
-  return sum;
+  if(rpm < 0){
+    return -pwm;
+  }
+  return pwm;
 
 }
 
-// Do robô com Encoder
+// ROBOT 03 ( Antigo com Encoder )
 
-double rightMotorEncoder(int rpm){
+double rightMotor3(int rpm){
   // PWM | RPM
-  // 50    115
-  // 100   247
+  // 25      53
+  // 50    122
+  // 100   257
   // 150   372
-  // 200   507
-  // 255   652
-  double x4, x3, x2, x, c, sum;
-  x4 = 1.6043 * 1e-9 * pow(rpm, 4);
-  x3 = 2.4922 * 1e-6 * pow(abs(rpm), 3);
-  x2 = 1.3091 * 1e-3 * pow(rpm, 2);
-  x  = 1.1758 * 1e-1 * abs(rpm);
-  c  = 22.6751;
-  sum = x4 - x3 + x2 + x + c;
+  // 200   527
+  // 255   670
+  double pwm;
+
+  pwm = 5.516 + 0.3733 * abs(rpm);
 
 
-  if(abs(rpm) > 650){
-    sum = 255;
+  if(abs(rpm) > 660){
+    pwm = 255;
   }
 
   if(rpm < 0){
-    return -sum;
+    return -pwm;
   }
-  return sum;
+  return pwm;
 }
 
-double leftMotorEncoder(int rpm){
+double leftMotor3(int rpm){
   // PWM | RPM
-  // 50    109
-  // 100   237
-  // 150   372
-  // 200   494
-  // 255   618
-  double x4, x3, x2, x, c, sum;
-  x4 = 1.2618 * 1e-9 * pow(rpm, 4);
-  x3 = 2.1282 * 1e-6 * pow(abs(rpm), 3);
-  x2 = 1.1496 * 1e-3 * pow(rpm, 2);
-  x  = 6.1829 * 1e-1 * abs(rpm);
-  c  = 6.3132;
-  sum = -x4 + x3 - x2 + x - c;
+  // 25    53
+  // 50    124
+  // 100   263
+  // 150   402
+  // 200   533
+  // 255   686
+  double pwm;
 
+  pwm = 0.3643 * abs(rpm) + 5.857;
 
-  if(abs(rpm) > 620){
-    sum = 255;
+  if(abs(rpm) > 680){
+    pwm = 255;
   }
 
   if(rpm < 0){
-    return -sum;
+    return -pwm;
   }
-  return sum;
+  return pwm;
 }
+
+
